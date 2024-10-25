@@ -1,0 +1,62 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int     @id @default(autoincrement())  // Unique identifier
+  username String  @unique                       // Username must be unique
+  email    String  @unique
+  name     String?
+  password String?
+  bookings Booking[]                             // One-to-many with Booking
+}
+
+model Host {
+  id       Int      @id @default(autoincrement()) // Unique identifier
+  username String   @unique                      // Username must be unique
+  email    String   @unique
+  name     String?
+  listings Property[]                            // One-to-many with Property
+}
+
+model Property {
+  id            Int         @id @default(autoincrement())
+  name          String
+  description   String
+  pricePerNight Decimal      @db.Decimal(10, 2)
+  hostId        Int
+  host          Host         @relation(fields: [hostId], references: [id])  // Relation with fields and references
+  amenities     Amenity[]    @relation("PropertyAmenities")
+  bookings      Booking[]
+  reviews       Review[]
+}
+
+model Amenity {
+  id        Int         @id @default(autoincrement())             // Unique identifier
+  name      String
+  properties Property[] @relation("PropertyAmenities")            // Many-to-many with Property
+}
+
+model Booking {
+  id          Int         @id @default(autoincrement())
+  checkIn     DateTime
+  checkOut    DateTime
+  userId      Int
+  propertyId  Int
+  user        User         @relation(fields: [userId], references: [id])  // Relation with fields and references
+  property    Property     @relation(fields: [propertyId], references: [id])
+}
+
+model Review {
+  id          Int         @id @default(autoincrement())
+  rating      Int
+  comment     String
+  propertyId  Int
+  property    Property     @relation(fields: [propertyId], references: [id])
+}
